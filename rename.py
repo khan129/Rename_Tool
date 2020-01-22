@@ -3,6 +3,12 @@ from PySide2 import QtWidgets
 import maya.OpenMayaUI as apiUI
 from shiboken2 import wrapInstance
 
+# Maya2018
+# 1) Select joints in maya
+# 2) Check side
+# 3) Enter name and part name
+# 4) rename it! 
+
 class renameSelected(QtWidgets.QDialog):
     def get_main_window(): 
         """
