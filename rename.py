@@ -1,33 +1,40 @@
-
-import sys
-import os
-import platform
 import maya.cmds as cmds
-from PySide2 import QtWidgets, QtCore
+from PySide2 import QtWidgets
 import maya.OpenMayaUI as apiUI
+from shiboken2 import wrapInstance
 
-from PySide2.QtWidgets import QApplication, QDialog, QLineEdit, QPushButton
+class renameSelected(QtWidgets.QDialog):
+    def get_main_window(): 
+        """
+        Gets main window in maya. 
 
+        Args:
+            None
+        Returns:
+            maya_main_window (Pyside.Widget)
+        """
+        main_window_parent = maya.OpenMayaUI.MQtUtil.mainWindow() 
+        maya_main_window = wrapInstance(long(main_window_parent), QtWidgets.QWidget) 
+        return maya_main_window 
 
-class renameSelected(QDialog):
-    def getMainWindowPtr(): 
-        mayaMainWindowPtr = maya.OpenMayaUI.MQtUtil.mainWindow() 
-        mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QtWid.QWidget) 
-        print mayaMainWindow 
-        return mayaMainWindow 
-    def __init__(self, parent=None):
+    def __init__(self, parent=get_main_window()):
+        """
+        Runs gui set up. 
+
+        Args:
+            parent (Pyside.Widget)
+        """
         super(renameSelected, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Window)
 
-        self.setWindowTitle("renameSelected")
-        
+        self.setWindowTitle("Rename Joints")
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.layout)
         
-        #add widget
+        # Add Widgets
         self.charname_label = QtWidgets.QLabel("Enter Character Name")
-        self.charname_input = QtWidgets.QLineEdit("dragon")
+        self.charname_input = QtWidgets.QLineEdit("Bob")
         self.side_label = QtWidgets.QLabel("Select Side")
         self.r_side = QtWidgets.QCheckBox("Right")
         self.l_side = QtWidgets.QCheckBox("Left")
@@ -36,7 +43,7 @@ class renameSelected(QDialog):
         self.anatomy_input = QtWidgets.QLineEdit("leg")
         self.rename_btn = QtWidgets.QPushButton("Rename")
 
-        #sdd layout
+        # Add Layout
         self.layout.addWidget(self.charname_label)
         self.layout.addWidget(self.charname_input)
         self.layout.addWidget(self.side_label)
@@ -47,19 +54,18 @@ class renameSelected(QDialog):
         self.layout.addWidget(self.anatomy_input)
         self.layout.addWidget(self.rename_btn)
 
-        
-        #add connections
+        # Add Connections
         self.rename_btn.clicked.connect(self.get_inputs)
 
-
-
-        # Layout Widgets
     def get_inputs(self):
+        """
+        Gets inputs from gui
+        """
 
-        jntchain = cmds.listRelatives(allDescendents=True, type='joint')
-        for jnt in reversed(jntchain):
-            cmds.select(jnt,add=True)
-        jj = cmds.ls(orderedSelection = True)
+        joint_chain = cmds.listRelatives(allDescendents=True, type='joint')
+        for joint in reversed(joint_chain):
+            cmds.select(joint,add=True)
+        selected_joints = cmds.ls(orderedSelection = True)
 
 
         charname = self.charname_input.text()
@@ -71,27 +77,22 @@ class renameSelected(QDialog):
         elif self.c_side.isChecked():
             side = 'c'
         else:
-            side = 'HAHAHA'
+            print "pick side please"
+            
+        # bn stands for bind
         type_ = 'bn'
-
-
         version = 0
-        lastjnt = jj[len(jj)-1]
-        print lastjnt
-        for jnt in jj:
+        last_joint = selected_joints[len(selected_joints)-1]
+        print last_joint
+        for joint in selected_joints:
             version = version + 1 
-            if jnt == lastjnt:
+            if joint == last_joint:
+                # bind end joint
                 type_='be'
             v = '%02d' % version
             name = "{}_{}_{}{}_{}".format(charname, side, anatomy, v, type_)
-            cmds.rename(jnt,name)
+            cmds.rename(joint,name)
         cmds.select(all=False)
 
-
-
-
-
-if __name__ == '__main__':
-    w = renameSelected(parent=getMainWindowPtr())
-    w.show()
+renameSelected().show()
 
